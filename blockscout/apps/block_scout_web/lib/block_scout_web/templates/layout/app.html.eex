@@ -244,9 +244,9 @@
         <p class="alert alert-info" role="alert"><%= Map.get(@conn.private, :phoenix_flash) && Phoenix.Controller.get_flash(@conn, :info) %></p>
       <% end %>
       <p class="alert alert-danger" role="alert"><%= Map.get(@conn.private, :phoenix_flash) && Phoenix.Controller.get_flash(@conn, :error) %></p>
-      <main class="js-ad-dependant-pt pt-5">
+      <div class="js-ad-dependant-pt">
         <%= @inner_content %>
-      </main>
+      </div>
       <%= render BlockScoutWeb.LayoutView, "_footer.html", assigns %>
     </div>
     <%= if (

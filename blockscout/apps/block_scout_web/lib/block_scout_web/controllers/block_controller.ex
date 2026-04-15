@@ -108,9 +108,32 @@ defmodule BlockScoutWeb.BlockController do
   end
 
   defp handle_render(full_options, conn, _params) do
+    blocks = Chain.list_blocks()
+
+    {gas_used_sum, gas_limit_sum, burnt_fees_sum} =
+      Enum.reduce(blocks, {Decimal.new(0), Decimal.new(0), Decimal.new(0)}, fn block, {gas_used, gas_limit, burnt_fees} ->
+        # network utilization
+        new_gas_used = Decimal.add(gas_used, block.gas_used || Decimal.new(0))
+        new_gas_limit = Decimal.add(gas_limit, block.gas_limit || Decimal.new(0))
+
+        # burnt fees (base_fee_per_gas is an integer or nil, gas_used is decimal)
+        base_fee = block.base_fee_per_gas || 0
+        block_burnt = Decimal.mult(Decimal.new(base_fee), block.gas_used || Decimal.new(0))
+        new_burnt_fees = Decimal.add(burnt_fees, block_burnt)
+
+        {new_gas_used, new_gas_limit, new_burnt_fees}
+      end)
+
+    network_utilization_percentage =
+      if Decimal.compare(gas_limit_sum, 0) == :eq,
+        do: 0.0,
+        else: gas_used_sum |> Decimal.div(gas_limit_sum) |> Decimal.mult(100) |> Decimal.to_float() |> Float.round(2)
+
     render(conn, "index.html",
       current_path: Controller.current_full_path(conn),
-      block_type: Keyword.get(full_options, :block_type, "Block")
+      block_type: Keyword.get(full_options, :block_type, "Block"),
+      network_utilization_percentage: network_utilization_percentage,
+      burnt_fees_sum: burnt_fees_sum
     )
   end
 end
