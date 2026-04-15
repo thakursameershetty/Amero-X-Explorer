@@ -257,13 +257,15 @@ export const elements = {
       if (state.emptyResponse) {
         return $el.hide()
       }
-
       $el.show()
+    }
+  },
+  '[data-async-listing] [data-current-page]': {
+    render ($el, state) {
       if (state.pagesStack.length === 0) {
-        return $el.text('Page 1')
+        return $el.text('1')
       }
-
-      $el.text('Page ' + state.pagesStack.length)
+      $el.text(state.pagesStack.length)
     }
   },
   '[data-async-listing] [data-loading-button]': {
@@ -364,6 +366,19 @@ function firstPageLoad (store) {
     loadItemsPrev()
     store.dispatch({ type: 'NAVIGATE_TO_NEWER' })
     event.stopImmediatePropagation()
+  })
+
+  $element.on('change', '[data-items-per-page]', (event) => {
+    const value = event.target.value
+    const currentUrl = new URL(window.location.href)
+    currentUrl.searchParams.set('page_size', value)
+    window.location.href = currentUrl.href
+  })
+
+  $element.on('submit', '[input-page-number-form]', (event) => {
+    event.preventDefault()
+    // Go to page not supported natively in cursor-based async_listing, keeping for layout consistency
+    return false
   })
 }
 

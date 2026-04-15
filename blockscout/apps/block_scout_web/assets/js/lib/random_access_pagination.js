@@ -182,9 +182,24 @@ export const elements = {
       $el.attr('href', state.prevPagePath)
     }
   },
-  '[data-async-listing] [pages-numbers-container]': {
+  '[data-async-listing] [data-page-number]': {
     render ($el, state) {
-      if (typeof state.pagesLimit !== 'undefined') { pagesNumbersGenerate(state.pagesLimit, $el, state.currentPageNumber, state.loading) }
+      if (state.emptyResponse) {
+        return $el.hide()
+      }
+      $el.show()
+    }
+  },
+  '[data-async-listing] [data-current-page]': {
+    render ($el, state) {
+      $el.text(state.currentPageNumber || 1)
+    }
+  },
+  '[data-async-listing] [data-total-pages]': {
+    render ($el, state) {
+      if (state.pagesLimit) {
+        $el.text(state.pagesLimit)
+      }
     }
   },
   '[data-async-listing] [data-loading-button]': {
@@ -296,6 +311,13 @@ function firstPageLoad (store) {
     loadPageByNumber(store, event.target.dataset.pageNumber)
   })
 
+  $element.on('change', '[data-items-per-page]', (event) => {
+    const value = event.target.value
+    const currentUrl = new URL(window.location.href)
+    currentUrl.searchParams.set('page_size', value)
+    window.location.href = currentUrl.href
+  })
+
   $element.on('submit', '[input-page-number-form]', (event) => {
     event.preventDefault()
     const $input = event.target.querySelector('#page-number')
@@ -362,7 +384,9 @@ function renderPaginationElements (start, end, currentPageNumber, loading) {
 }
 
 function renderPaginationElement (text, active, loading) {
-  return '<li class="page-item' + (active ? ' active' : '') + (text === '...' || loading ? ' disabled' : '') + '"><a class="page-link page-link-light-hover" data-page-number=' + text + '>' + text + '</a></li>'
+  const activeClass = active ? ' bg-white/10 text-white border-white/20' : ' bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+  const disabledClass = (text === '...' || loading) ? ' opacity-50 cursor-not-allowed pointer-events-none' : ''
+  return '<li><a class="px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium flex items-center justify-center min-w-[34px] min-h-[34px] cursor-pointer' + activeClass + disabledClass + '" data-page-number="' + text + '">' + text + '</a></li>'
 }
 
 function generateStub (size) {

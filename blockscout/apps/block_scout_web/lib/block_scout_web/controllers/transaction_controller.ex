@@ -120,11 +120,26 @@ defmodule BlockScoutWeb.TransactionController do
   def index(conn, _params) do
     transaction_estimated_count = TransactionsCount.get()
 
+    transaction_stats_all = BlockScoutWeb.API.V2.Helper.get_transaction_stats()
+    transaction_stats_today = Enum.at(transaction_stats_all, 0)
+    
+    transactions_24h = (transaction_stats_today && transaction_stats_today.number_of_transactions) || 0
+    total_fee_wei = (transaction_stats_today && transaction_stats_today.total_fee) || Decimal.new(0)
+    
+    avg_fee_wei = 
+      if transactions_24h > 0, do: Decimal.div(total_fee_wei, Decimal.new(transactions_24h)), else: Decimal.new(0)
+      
+    pending_transactions = Explorer.Chain.pending_transaction_count()
+
     render(
       conn,
       "index.html",
       current_path: Controller.current_full_path(conn),
-      transaction_estimated_count: transaction_estimated_count
+      transaction_estimated_count: transaction_estimated_count,
+      transactions_24h: transactions_24h,
+      total_fee_wei: total_fee_wei,
+      avg_fee_wei: avg_fee_wei,
+      pending_transactions: pending_transactions
     )
   end
 

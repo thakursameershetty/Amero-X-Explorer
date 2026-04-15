@@ -1,4 +1,4 @@
-<section class="container">
+<main class="flex-grow container mx-auto px-4 pt-28 pb-12 max-w-[1400px] relative z-10">
   <%= render BlockScoutWeb.Advertisement.TextAdView, "index.html", conn: @conn %>
   <div class="card">
     <div class="card-body" data-async-load data-async-listing="<%= @current_path %>">
